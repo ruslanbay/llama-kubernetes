@@ -37,7 +37,6 @@ M = P∗4B∗1.2 / (32/Q), где
 В теории, 8 Гбайт RAM на моём планешете должно быть достаточно для запуска модели с 2B параметрами. Чтобы перестраховаться я активировал Zram. В отличии от файла подкачки, который производит запись/считывание данных с диска, Zram при нехватке RAM выполняет сжатие данных "на лету" прямо в оперативной памяти. В зависимости от алгоритма сжатия и типа данных, [Zram позволяет записать в оперативную память данных в несколько раз больше физического объёма RAM](https://linuxreviews.org/Zram). Zstd и lzo-rle - наиболее оптимальные алгоритмы по соотношению степени сжания к скорости выполнения этого самого сжатия.
 
 Отключим swapfile, который активирован по умолчанию в ClearLinux:
-
 ```bash
 sudo systemctl mask $(sed -n -e 's#^/var/\([0-9a-z]*\).*#var-\1.swap#p' /proc/swaps) 2>/dev/null
 sudo swapoff -a
@@ -76,7 +75,7 @@ sudo systemctl enable --now zram.service
 
 Чтобы иметь простор для экспериментов, я воспользовался контейнерезацией. К тому же, это был хороший повод опробовать k0s - легковесный дистрибутив Kubernetes "всё-в-одном".
 
-Активируем IP forwarding [<sup>[источник]</sup>](https://www.clearlinux.org/clear-linux-documentation/tutorials/kubernetes.html#set-up-kubernetes-manually):
+Активируем IP forwarding <sup><a href="https://www.clearlinux.org/clear-linux-documentation/tutorials/kubernetes.html#set-up-kubernetes-manually">[источник]</a></sup>:
 
 ```bash
 sudo mkdir -p /etc/sysctl.d/
@@ -95,9 +94,32 @@ sudo sysctl --system
 echo "127.0.0.1 localhost `hostname`" | sudo tee --append /etc/hosts
 ```
 
+В отличии от полноценного Kubernetes, [k0s поставляется с предустановленным CNI](https://docs.k0sproject.io/stable/networking/), нет необходимости устанавливать его вручную.
 
-k0s по умолчанию использует
+k0s по умолчанию использует containerd. Чтобы добавить containerd установим [containers-basic](https://www.clearlinux.org/software/bundle/containers-basic.html):
+```bash
+sudo swupd bundle-add containers-basic
+sudo systemctl enable --now containerd.service
+```
 
+Из недостатков ClearLinux - дополнительное программное обеспечение поставляется в виде bundle-ов, которые часто содержат пакеты, которые не используются и просто занимают место на диске. Помимо containerd, containers-basic так же содержит docker и cri-o. Чтобы избежать путаницы, отключим неиспользуемые сервисы:
+```bash
+sudo systemctl disable crio.service
+sudo systemctl disable docker.socket docker.service
+```
+
+Теперь, собственно, устанавливаем сам k0s<a href=https://docs.k0sproject.io/stable/install/><sup>источник</sup></a>:
+```bash
+curl -sSLf https://get.k0s.sh | sudo sh
+
+Отключаем встроенный metrics apiservice, так как мы будем использовать Prometheus
+sudo k0s install controller --single --disable-components metrics-server
+
+sudo k0s start
+
+Этот шаг нужен, чтобы избежать некоторых ошибок и повторного скачивания образов каждый раз после выполнения команды `k0s reset`
+sudo ln -s /var/run/containerd/containerd.sock /run/k0s/containerd.sock
+```
 
 
 
