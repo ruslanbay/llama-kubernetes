@@ -108,7 +108,7 @@ sudo systemctl disable crio.service
 sudo systemctl disable docker.socket docker.service
 ```
 
-Теперь, собственно, устанавливаем сам k0s<a href=https://docs.k0sproject.io/stable/install/><sup>источник</sup></a>:
+Теперь, собственно, устанавливаем сам k0s<a href=https://docs.k0sproject.io/stable/install/><sup>[источник]</sup></a>:
 ```bash
 curl -sSLf https://get.k0s.sh | sudo sh
 
