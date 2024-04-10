@@ -75,7 +75,7 @@ sudo systemctl enable --now zram.service
 
 Чтобы иметь простор для экспериментов, я воспользовался контейнерезацией. К тому же, это был хороший повод опробовать k0s - легковесный дистрибутив Kubernetes "всё-в-одном".
 
-Активируем IP forwarding <sup><a href="https://www.clearlinux.org/clear-linux-documentation/tutorials/kubernetes.html#set-up-kubernetes-manually">[источник]</a></sup> :
+Активируем IP forwarding <sup><a style="text-decoration:none" href="https://www.clearlinux.org/clear-linux-documentation/tutorials/kubernetes.html#set-up-kubernetes-manually">[источник]</a></sup> :
 
 ```bash
 sudo mkdir -p /etc/sysctl.d/
@@ -108,7 +108,7 @@ sudo systemctl disable crio.service
 sudo systemctl disable docker.socket docker.service
 ```
 
-Теперь, собственно, устанавливаем сам k0s <a href=https://docs.k0sproject.io/stable/install/><sup>[источник]</sup></a> :
+Теперь, собственно, устанавливаем сам k0s <a style="text-decoration:none" href="https://docs.k0sproject.io/stable/install/"><sup>[источник]</sup></a> :
 ```bash
 curl -sSLf https://get.k0s.sh | sudo sh
 
