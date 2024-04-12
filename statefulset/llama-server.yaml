@@ -30,13 +30,3 @@ spec:
       - name: llama
         persistentVolumeClaim:
           claimName: llama
-#  volumeClaimTemplates:
-#  - metadata:
-#      name: llama
-#    spec:
-#      accessModes:
-#      - ReadWriteOnce
-#      storageClassName: llama
-#      resources:
-#        requests:
-#          storage: 10Gi
