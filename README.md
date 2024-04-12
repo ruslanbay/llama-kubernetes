@@ -230,6 +230,10 @@ sudo k0s kubectl apply -f servicemonitor/llama-metrics.yaml
 ```
 
 Теперь развернём непосредственно сам llama server:
+
+> [!WARNING]
+> Перед выполнением в файле [pv/llama.yaml](https://github.com/ruslanbay/llama-kubernetes/blob/test/pv/llama.yaml#L15) укажите путь до каталога `~/workdir/` в вашей системе
+
 ```bash
 sudo k0s kubectl apply -f service/llama-server.yaml
 sudo k0s kubectl apply -f storage/llama-storage-class.yaml
