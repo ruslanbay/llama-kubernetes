@@ -2,22 +2,22 @@
 
 Даже с маленьким ~~IQ~~ RAM можно ~~сделать BBQ~~ запустить большую языковую модель...
 
-![image](https://github.com/ruslanbay/llama-kubernetes/blob/test/images/futurama.png)
+![image](https://github.com/ruslanbay/llama-kubernetes/blob/main/images/futurama.png)
 
 Недавно я опробовал GitHub Copilot - AI-ассистент для написания кода. В качестве подопытного проекта я использовал https://github.com/ruslanbay/moex Из этого эксперимента, я сделал вывод что на данном этапе ассистент не напишет приложение с нуля, но если основная логика реализована, то он вполне пригоден для рефакторинга. Тем не менее это был интересный опыт и в большинстве случаев ассистент справлялся с поставленной задачей.
 
 Чат боты требовательны к аппартаным ресурсам и потребляют много электроэнергии в процессе работы. В интернете я нашёл несколько моделей специально обученных для написания кода. Например, модель Phi2 от Microsoft включает всего два миллиарда параметров, но её [навыки написания кода не уступают большим моделям](https://www.microsoft.com/en-us/research/blog/phi-2-the-surprising-power-of-small-language-models/).
-![image](https://github.com/ruslanbay/llama-kubernetes/blob/test/images/coding_benchmark.png)
+![image](https://github.com/ruslanbay/llama-kubernetes/blob/main/images/coding_benchmark.png)
 
 В интернете доступны модели, которые можно запустить даже на мобильном устройстве. Этот пост призван продемонстрировать что для запуска языковой модели не требуется компьютер с новейшим GPU и терабайтами оперативной памяти. Я не ставил перед собой задачу обучения языковой модели - для этого всё же требуется мощная видеокарта и значительные объёмы памяти.
 
- 1. [Выбор операционной системы](https://github.com/ruslanbay/llama-kubernetes/blob/test/README.md#%D0%B2%D1%8B%D0%B1%D0%BE%D1%80-%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D0%BE%D0%B9-%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B)
- 2. [Активируем Zram](https://github.com/ruslanbay/llama-kubernetes/blob/test/README.md#%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%B8%D1%80%D1%83%D0%B5%D0%BC-zram)
- 3. [Развертываем Kubernetes (k0s)](https://github.com/ruslanbay/llama-kubernetes/blob/test/README.md#%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-kubernetes-k0s)
- 4. [Добавляем мониторинг](https://github.com/ruslanbay/llama-kubernetes/blob/test/README.md#%D0%B4%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D1%8F%D0%B5%D0%BC-%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-%D0%B8%D1%81%D1%82%D0%BE%D1%87%D0%BD%D0%B8%D0%BA)
- 5. [Компилируем llama.cpp](https://github.com/ruslanbay/llama-kubernetes/blob/test/README.md#%D0%BA%D0%BE%D0%BC%D0%BF%D0%B8%D0%BB%D0%B8%D1%80%D1%83%D0%B5%D0%BC-llama-server)
- 6. [Запускаем llama.cpp сервер в виде statefulset](https://github.com/ruslanbay/llama-kubernetes/blob/test/README.md#%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B0%D0%B5%D0%BC-llama-server-%D0%B2-%D0%B2%D0%B8%D0%B4%D0%B5-statefulset)
- 7. [Пример использования модели](https://github.com/ruslanbay/llama-kubernetes/blob/test/README.md#%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-%D0%BC%D0%BE%D0%B4%D0%B5%D0%BB%D0%B8)
+ 1. [Выбор операционной системы](https://github.com/ruslanbay/llama-kubernetes/blob/main/README.md#%D0%B2%D1%8B%D0%B1%D0%BE%D1%80-%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D0%BE%D0%B9-%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B)
+ 2. [Активируем Zram](https://github.com/ruslanbay/llama-kubernetes/blob/main/README.md#%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%B8%D1%80%D1%83%D0%B5%D0%BC-zram)
+ 3. [Развертываем Kubernetes (k0s)](https://github.com/ruslanbay/llama-kubernetes/blob/main/README.md#%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-kubernetes-k0s)
+ 4. [Добавляем мониторинг](https://github.com/ruslanbay/llama-kubernetes/blob/main/README.md#%D0%B4%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D1%8F%D0%B5%D0%BC-%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-%D0%B8%D1%81%D1%82%D0%BE%D1%87%D0%BD%D0%B8%D0%BA)
+ 5. [Компилируем llama.cpp](https://github.com/ruslanbay/llama-kubernetes/blob/main/README.md#%D0%BA%D0%BE%D0%BC%D0%BF%D0%B8%D0%BB%D0%B8%D1%80%D1%83%D0%B5%D0%BC-llama-server)
+ 6. [Запускаем llama.cpp сервер в виде statefulset](https://github.com/ruslanbay/llama-kubernetes/blob/main/README.md#%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B0%D0%B5%D0%BC-llama-server-%D0%B2-%D0%B2%D0%B8%D0%B4%D0%B5-statefulset)
+ 7. [Пример использования модели](https://github.com/ruslanbay/llama-kubernetes/blob/main/README.md#%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-%D0%BC%D0%BE%D0%B4%D0%B5%D0%BB%D0%B8)
 
 ## Выбор операционной системы
 
@@ -232,7 +232,7 @@ sudo k0s kubectl apply -f servicemonitor/llama-metrics.yaml
 Теперь развернём непосредственно сам llama server:
 
 > [!WARNING]
-> Перед выполнением в файле [pv/llama.yaml](https://github.com/ruslanbay/llama-kubernetes/blob/test/pv/llama.yaml#L15) укажите путь до каталога `~/workdir/llama.cpp` в вашей системе
+> Перед выполнением в файле [pv/llama.yaml](https://github.com/ruslanbay/llama-kubernetes/blob/main/pv/llama.yaml#L15) укажите путь до каталога `~/workdir/llama.cpp` в вашей системе
 
 ```bash
 sudo k0s kubectl apply -f service/llama-server.yaml
@@ -328,7 +328,7 @@ curl -X POST http://10.244.0.143:8080/completion \
 }
 ```
 
-На моей машине IP-адрес сервиса Grafana имеет значение 10.244.0.142. Откроем в браузере адрес 10.244.0.142:3000 (логин и пароль по умолчанию: admin, admin) и создадим новый дашборд. Можете использовать мой шаблон [grafana_dashboard.json](https://github.com/ruslanbay/llama-kubernetes/edit/test/grafana_dashboard.json). Вы увидете примерно следующую картинку:
-![image](https://github.com/ruslanbay/llama-kubernetes/blob/test/images/grafana.png)
+На моей машине IP-адрес сервиса Grafana имеет значение 10.244.0.142. Откроем в браузере адрес 10.244.0.142:3000 (логин и пароль по умолчанию: admin, admin) и создадим новый дашборд. Можете использовать мой шаблон [grafana_dashboard.json](https://github.com/ruslanbay/llama-kubernetes/blob/main/grafana_dashboard.json). Вы увидете примерно следующую картинку:
+![image](https://github.com/ruslanbay/llama-kubernetes/blob/main/images/grafana.png)
 
 Поздравляю! На вашем компьютере развёрнута полноценная языковая модель. Если быть до конца честным, я заморочился с контейнерезацией и написал этот пост только ради кадра из Футурамы. Всё же надеюсь материал будет полезным. Всем пока!
