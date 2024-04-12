@@ -320,7 +320,7 @@ curl -X POST http://10.244.0.143:8080/completion \
 }
 ```
 
-На моей машине IP-адрес сервиса Grafana имеет значение 10.244.0.142. Откроем в браузере адрес 10.244.0.142:3000 и создадим новый дашборд. Можете использовать мой шаблон [grafana_dashboard.json](https://github.com/ruslanbay/llama-kubernetes/edit/test/grafana_dashboard.json). Вы увидете примерно следующую картинку:
+На моей машине IP-адрес сервиса Grafana имеет значение 10.244.0.142. Откроем в браузере адрес 10.244.0.142:3000 (логин и пароль по умолчанию: admin, admin) и создадим новый дашборд. Можете использовать мой шаблон [grafana_dashboard.json](https://github.com/ruslanbay/llama-kubernetes/edit/test/grafana_dashboard.json). Вы увидете примерно следующую картинку:
 ![image](https://github.com/ruslanbay/llama-kubernetes/blob/test/images/grafana-3.png)
 
 Поздравляю! На вашем компьютере развёрнута полноценная языковая модель. Всё готово к экспериментам!
