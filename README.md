@@ -7,7 +7,7 @@
 Чат боты требовательны к аппартаным ресурсам и потребляют много электроэнергии в процессе работы. В интернете я нашёл несколько моделей специально обученных для написания кода. Например, модель Phi2 от Microsoft включает всего два миллиарда параметров, но её [навыки написания кода не уступают большим моделям](https://www.microsoft.com/en-us/research/blog/phi-2-the-surprising-power-of-small-language-models/).
 ![image](https://github.com/ruslanbay/llama-kubernetes/blob/test/images/coding_benchmark.png)
 
-В интернете доступны модели, которые можно запустить даже на мобильном устройстве. Я написал этот пост, чтобы продемонстрировать что для запуска языковой модели не требуется компьютер с новейшим GPU и терабайтами оперативной памяти. Замечу, я не ставил перед собой задачу обучения языковой модели - для этого всё же требуется мощная видеокарта и значительные объёмы памяти.
+В интернете доступны модели, которые можно запустить даже на мобильном устройстве. Этот пост призван продемонстрировать что для запуска языковой модели не требуется компьютер с новейшим GPU и терабайтами оперативной памяти. Я не ставил перед собой задачу обучения языковой модели - для этого всё же требуется мощная видеокарта и значительные объёмы памяти.
 
  1. Выбор операционной системы
  2. Активируем ZRAM
@@ -16,7 +16,7 @@
 
 ## Выбор операционной системы
 
-Я часто переезжаю, поэтому единственный компьютер, которым я пользуюсь на данный момент - планшет Surface Pro 7 с процессором Core i5-1035G4 и 8Гбайт оперативной и 128 Гбайт постоянной памяти. Core i5-1035G4 - один из первых потребительских процессоров с поддержкой инструкций AVX-512. В теории, инструкции AVX-512 должны обеспечить лучшую производительность в задачах машинного обучения. Чтобы восползьоваться этим преимуществом я установил на планшет операционную систему [ClearLinux](https://www.clearlinux.org/documentation/clear-linux/get-started.html) - дистрибутив от Intel, который содержит бинарные пакеты оптимизированные для архитектуры [x86-64-v4](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels).
+Я часто переезжаю, поэтому единственный компьютер, которым я пользуюсь на данный момент - планшет Surface Pro 7 с процессором Core i5-1035G4, 8 Гбайт оперативной и 128 Гбайт постоянной памяти. Core i5-1035G4 - один из первых потребительских процессоров с поддержкой инструкций AVX-512. В теории, инструкции AVX-512 должны обеспечить лучшую производительность в задачах машинного обучения. Чтобы восползьоваться этим преимуществом я установил на планшет операционную систему [ClearLinux](https://www.clearlinux.org/documentation/clear-linux/get-started.html) - дистрибутив от Intel, который содержит бинарные пакеты оптимизированные для архитектуры [x86-64-v4](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels).
 
 
 ## Активируем Zram
@@ -34,7 +34,7 @@ M = P∗4B∗1.2 / (32/Q), где
 |Q	|The amount of bits that should be used for loading the model. E.g. 16 bits, 8 bits or 4 bits.|
 |1.2	|Represents a 20% overhead of loading additional things in GPU memory.|
 
-В теории, 8 Гбайт RAM на моём планешете должно быть достаточно для запуска модели с 2B параметрами. Чтобы перестраховаться я активировал Zram. В отличии от файла подкачки, который производит запись/считывание данных с диска, Zram при нехватке RAM выполняет сжатие данных "на лету" прямо в оперативной памяти. В зависимости от алгоритма сжатия и типа данных, [Zram позволяет записать в оперативную память данных в несколько раз больше физического объёма RAM](https://linuxreviews.org/Zram). Zstd и lzo-rle - наиболее оптимальные алгоритмы по соотношению степени сжания к скорости выполнения этого самого сжатия.
+В теории, 8 Гбайт RAM на моём планешете достаточно для запуска модели с 2B параметрами. Помимо языковой модели, примерно 2 Гбайта оперативной памяти требуется операционной системе, плюс я хочу иметь возможность запустить Prometheus и Grafana для сбора и отображения метрик. Чтобы оперативной памяти хватило наверняка, я активировал Zram. В отличии от файла подкачки, который производит запись/считывание данных с диска, Zram при нехватке оперативки выполняет сжатие данных "на лету" прямо в оперативной памяти. В зависимости от алгоритма сжатия и типа данных, [Zram позволяет записать в оперативную память данных в несколько раз больше физического объёма RAM](https://linuxreviews.org/Zram). Zstd и lzo-rle - наиболее оптимальные алгоритмы по соотношению степени сжатия к скорости выполнения этого самого сжатия.
 
 Отключим swapfile, который активирован по умолчанию в ClearLinux:
 ```bash
@@ -71,7 +71,7 @@ sudo systemctl enable --now zram.service
 
 ## Развертывание Kubernetes (k0s)
 
-Чтобы иметь простор для экспериментов, я воспользовался контейнерезацией. К тому же, это был хороший повод опробовать k0s - легковесный дистрибутив Kubernetes "всё-в-одном".
+Чтобы иметь простор для экспериментов, я воспользовался контейнерезацией. К тому же, это был хороший повод опробовать [k0s - легковесный дистрибутив Kubernetes "всё-в-одном"](https://docs.k0sproject.io/stable/).
 
 Активируем IP forwarding <sup><a style="text-decoration:none" href="https://www.clearlinux.org/clear-linux-documentation/tutorials/kubernetes.html#set-up-kubernetes-manually">[источник]</a></sup> :
 
@@ -92,7 +92,7 @@ sudo sysctl --system
 echo "127.0.0.1 localhost `hostname`" | sudo tee --append /etc/hosts
 ```
 
-В отличии от полноценного Kubernetes, [k0s поставляется с предустановленным CNI](https://docs.k0sproject.io/stable/networking/), нет необходимости устанавливать его вручную.
+В отличии от полноценного Kubernetes, [k0s поставляется с предустановленным CNI](https://docs.k0sproject.io/stable/networking/) и нет необходимости устанавливать его вручную.
 
 > [!NOTE]
 > По идее, установка containerd тоже не требуется, но мне пришлось установить его отдельно, чтобы обойти некоторые ошибки
@@ -103,7 +103,7 @@ sudo swupd bundle-add containers-basic
 sudo systemctl enable --now containerd.service
 ```
 
-Из недостатков ClearLinux - дополнительное программное обеспечение поставляется в виде bundle-ов, которые зачастую содержат лишние зависимости пакеты и занимают много дискового пространства. Помимо containerd, containers-basic так же содержит docker и cri-o. Чтобы избежать путаницы, отключим неиспользуемые сервисы:
+Из недостатков ClearLinux - дополнительное программное обеспечение поставляется в виде bundle-ов, которые зачастую содержат лишние пакеты и занимают много дискового пространства. Помимо containerd, containers-basic так же содержит docker и cri-o. Чтобы избежать путаницы, отключим неиспользуемые сервисы:
 ```bash
 sudo systemctl disable crio.service
 sudo systemctl disable docker.socket docker.service
@@ -119,7 +119,7 @@ curl -sSLf https://get.k0s.sh | sudo sh
 sudo k0s install controller --single --disable-components metrics-server
 sudo k0s start
 ```
-Этот шаг нужен, чтобы избежать некоторых ошибок и повторного скачивания образов каждый раз после выполнения команды `k0s reset`
+Создадим ссылку на файл `/var/run/containerd/containerd.sock`. Этот шаг нужен, чтобы избежать некоторых ошибок и повторного скачивания образов каждый раз после выполнения команды `k0s reset`
 ```bash
 sudo ln -s /var/run/containerd/containerd.sock /run/k0s/containerd.sock
 ```
@@ -146,7 +146,7 @@ sudo k0s kubectl get pods -A -w
 mkdir ~/workdir
 ```
 
-В директории `workdir` разместим файлы, связанные с проектом:
+В директории `~/workdir` мы разместим файлы, связанные с проектом:
 ```bash
 git clone https://github.com/prometheus-operator/kube-prometheus.git ~/workdir/kube-prometheus
 cd ~/workdir/kube-prometheus
@@ -160,10 +160,12 @@ sudo k0s kubectl apply -f manifests/
 
 Дождёмся когда все контейнеры перейдут в статус `Running`
 ```bash
-sudo k0s kubectl get pod -monitoring -w
+sudo k0s kubectl get pod -n monitoring -w
 ```
 
 ## Компилируем llama server
+[llama.cpp](https://github.com/ggerganov/llama.cpp/) - в некотором смысле обёртка, которая позволяет запускать различные языковые модели.
+
 Если в вашем случае встроенная графика Intel содержит более 80 вычислительных блоков (Execution Unit, EU), то можете выполнить установку по инструкции [llama.cpp for SYCL](https://github.com/ggerganov/llama.cpp/blob/master/README-sycl.md). Я использую [процессор i5-1035g4, который имеет интегрированную графику с 48 EU](https://en.wikichip.org/wiki/intel/core_i5/i5-1035g4#Graphics) - этого недостаточно для комфортного использования языковой модели. Поэтому я воспользуюсь [intel-onemkl](https://github.com/ggerganov/llama.cpp/tree/master#intel-onemkl) для компиляции llama.cpp
 
 Сколонируем репозиторий llama.cpp в каталог `~/workdir/llama.cpp`:
@@ -171,7 +173,7 @@ sudo k0s kubectl get pod -monitoring -w
 git clone -b b2420 https://github.com/ggerganov/llama.cpp.git ~/workdir/llama.cpp
 ```
 
-Запустим контейнер:
+Запустим контейнер. Вместо `/home/admin/workdir/` укажите полный путь до каталога `~/workdir/` в вашей системе:
 
 > [!WARNING]
 > Потребуется примерно 20Гбайт дискового пространства.
@@ -189,20 +191,20 @@ cmake .. -DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=Intel10_64lp -DCMAKE_C_COMPILER=icx
 cmake --build . --config Release
 ```
 
-Контейнер `oneapi-basekit` занимает примерно 20Гбайт дискового пространства. После завершения компиляции чтобы высвободить место на диске удалим этот контейнер, а для запуска llama server будем использовать образ `oneapi-runtime`.
+Контейнер `oneapi-basekit` занимает примерно 20Гбайт дискового пространства. После завершения компиляции можете удалить этот контейнер чтобы высвободить место на диске, а для запуска llama server использовать образ [oneapi-runtime](https://hub.docker.com/r/intel/oneapi-runtime).
 
 
 ## Запускаем llama server в виде statefulset
+
+Для примера воспользуемся моделью [phi-2.Q5_K_M](https://huggingface.co/TheBloke/phi-2-GGUF). Загрузим её и поместим в каталог `~/workdir/llama.cpp/models/`
+```bash
+curl https://huggingface.co/TheBloke/phi-2-GGUF/resolve/main/phi-2.Q5_K_M.gguf?download=true -o ~/workdir/llama.cpp/models/phi-2.Q5_K_M.gguf
+```
 
 Склонируем репозиторий https://github.com/ruslanbay/llama-kubernetes в каталог `~/workdir/llama-kubernetes`:
 ```bash
 git clone https://github.com/ruslanbay/llama-kubernetes.git ~/workdir/llama-kubernetes
 cd ~/workdir/llama-kubernetes
-```
-
-Для примера воспользуемся моделью [phi-2.Q5_K_M](https://huggingface.co/TheBloke/phi-2-GGUF). Загрузим её и поместим в каталог `~\workdir\llama.cpp\models\`
-```bash
-curl https://huggingface.co/TheBloke/phi-2-GGUF/resolve/main/phi-2.Q5_K_M.gguf?download=true -o ~\workdir\llama.cpp\models\phi-2.Q5_K_M.gguf
 ```
 
 Если запустить llama server с опцией `--metrics`, то будет добавлен endpoint `/metrics` со следующими метриками <a style="text-decoration:none" href="https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md#result-json-2"><sup>[источник]</sup></a> :
@@ -234,13 +236,12 @@ sudo k0s kubectl apply -f statefulset/llama-server.yaml
 
 ## Пример использования модели
 
-Вывести список всех сервисов:
+Выведем список всех сервисов. Нас интересуют сервисы llama service и grafana - запомните их IP-адреса.
 ```bash
 sudo k0s kubectl get svc -A
 ```
 
-Нас интересуют сервисы llama-server и grafana:
-
+В моём случае llama service имеет IP-адрес 10.244.0.143. Используем этот адрес, чтобы отправить запрос:
 Попросим модель сегенировать поздравление со свадьбой. Как видим, модель справилась с задачей за 3 секунды:
 ```bash
 curl -X POST http://10.244.0.143:8080/completion \
@@ -319,27 +320,7 @@ curl -X POST http://10.244.0.143:8080/completion \
 }
 ```
 
-Посмотрим метрики в Grafana:
+На моей машине IP-адрес сервиса Grafana имеет значение 10.244.0.142. Откроем в браузере адрес 10.244.0.142:3000 и создадим новый дашборд. Можете использовать мой шаблон [grafana_dashboard.json](https://github.com/ruslanbay/llama-kubernetes/edit/test/grafana_dashboard.json). Вы увидете примерно следующую картинку:
 ![image](https://github.com/ruslanbay/llama-kubernetes/blob/test/images/grafana-3.png)
 
-
-
-## Удаление
-
-Удаляем llama-server
-sudo k0s kubectl delete statefulset llama-server
-
-Удаляем мониторинг
-https://github.com/prometheus-operator/kube-prometheus?tab=readme-ov-file#quickstart
-cd /home/admin/workdir/kube-prometheus
-sudo k0s kubectl delete --ignore-not-found=true -f manifests/ -f manifests/setup
-
-Удаляем k0s
-https://docs.k0sproject.io/v1.29.2+k0s.0/reinstall-k0sctl/#reinstall-a-node
-sudo k0s kubectl drain --ignore-daemonsets --delete-emptydir-data ${HOSTNAME}
-sudo k0s stop
-sudo k0s reset
-sudo systemctl reboot
-
-
-Для сравнения Gemma потребовалось более 20 минут на то чтобы сгененрировать ответ.
+Поздравляю! На вашем компьютере развёрнута полноценная языковая модель. Всё готово к экспериментам!
