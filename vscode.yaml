@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vscode-settings
+  namespace: vscode
+data:
+  settings.json: |
+    {
+      "telemetry.editStats.enabled": false,
+      "telemetry.feedback.enabled": false,
+      "telemetry.telemetryLevel": "off",
+      "terminal.integrated.defaultProfile.linux": "bash",
+      "github.copilot.chat.byok.ollamaEndpoint": "http://ollama-service.ollama:11434"
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vscode-server
+  namespace: vscode
+  labels:
+    app: vscode-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vscode-server
+  template:
+    metadata:
+      namespace: vscode
+      labels:
+        app: vscode-server
+    spec:
+      volumes:
+      - name: vscode-settings
+        configMap:
+          name: vscode-settings
+      - name: vscode-data
+        hostPath:
+          path: ${VSCODE_DATA_PATH}
+          type: Directory
+      containers:
+      - name: vscode-server
+        image: alpine:3.22
+        ports:
+        - containerPort: 8088
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /version
+            port: 8088
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /version
+            port: 8088
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        volumeMounts:
+        - name: vscode-settings
+          mountPath: /root/.vscode-server/data/Machine/settings.json
+          subPath: settings.json
+        - name: vscode-data
+          mountPath: /root/.vscode-server
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          apk add \
+              bash \
+              curl \
+              git \
+              github-cli \
+              libgcc \
+              libstdc++
+
+          # Install VS Code Server
+          curl -fsSL 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64' | \
+            tar -xz -C /usr/local/bin
+
+          # Install extensions
+          code --install-extension GitHub.copilot \
+               --install-extension GitHub.copilot-chat \
+               --install-extension ms-windows-ai-studio.windows-ai-studio \
+               --uninstall-extension TeamsDevApp.vscode-ai-foundry \
+               --uninstall-extension ms-azuretools.vscode-azureresourcegroups \
+               --force
+
+          # Start VS Code Server
+          code serve-web --host 0.0.0.0 --port 8088 --connection-token "${VSCODE_CONNECTION_TOKEN}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vscode-server
+  namespace: vscode
+  labels:
+    app: vscode-server
+spec:
+  type: NodePort
+  selector:
+    app: vscode-server
+  ports:
+    - protocol: TCP
+      port: 8088
+      targetPort: 8088
+      nodePort: 30088
