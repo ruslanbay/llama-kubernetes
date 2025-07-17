@@ -12,12 +12,14 @@ sudo dnf install -y --setopt=install_weak_deps=FALSE \
   qemu-img
 ```
 
-## Создание виртуальной машины (гостевая система)
+## Создание виртуальной машины (гостевая система) <sup>[docs](https://www.qemu.org/docs/master/system/qemu-manpage.html)</sup>
 
 ```shell
 VM_NAME=alpine-k0s
 VM_DIR="${HOME}/VMs"
-CPU_CORES=2
+CPU_SOCKETS=1
+CPU_CORES_PER_SOCKET=4
+CPU_THREADS_PER_CORE=2
 RAM_SIZE=6G
 DISK_SIZE=15G
 DISK_PATH="${VM_DIR}/${VM_NAME}.qcow2"
@@ -36,7 +38,7 @@ qemu-system-x86_64 \
   -machine type=q35,accel=kvm \
   -enable-kvm \
   -cpu host \
-  -smp $CPU_CORES \
+  -smp sockets=$CPU_SOCKETS,cores=$CPU_CORES_PER_SOCKET,threads=$CPU_THREADS_PER_CORE \
   -m $RAM_SIZE \
   -drive file="$DISK_PATH",if=virtio,format=qcow2 \
   -cdrom "$ISO_PATH" \
